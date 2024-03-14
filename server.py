@@ -1,6 +1,9 @@
-from flask import Flask, Response
+from flask import Flask, Response, request
 from lib import create_capture, read_frame
+from webui import webui_root
 import cv2 as cv
+import json
+import cv2
 import numpy as np
 import math
 
@@ -140,17 +143,36 @@ def generate_frames(capture, f):
         if frame is None:
             break
         else:
-            converted = f(frame, capture)
-            ret, buffer = cv.imencode('.jpg', converted)
+            # blue = convert_to_blue(frame)
+            ret, buffer = cv2.imencode('.jpg', frame)
             encoded = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
 
+configStr = """{
+    "colors_hsv": {
+        "zero": [[87, 134, 129], [87, 255, 255]],
+        "ball": [[0, 134, 129], [0, 255, 255]]
+    },
+    "corners": [
+        [18, 21],
+        [14, 105],
+        [92, 105],
+        [80, 20]
+    ]
+}"""
+config = json.loads(configStr)
 
 @app.route('/')
-def hello_world():
-    return 'Hello, World!'
+def root():
+    return webui_root(configStr)
 
+@app.route('/configure', methods=['POST'])
+def configure():
+    global config
+    config = request.json
+    print("config updated", config)
+    return "OK"
 
 mimeType = 'multipart/x-mixed-replace; boundary=frame'
 
