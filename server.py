@@ -23,16 +23,15 @@ def convert_to_blue(frame):
 
     return blue
 
-def generate_frames():
-    capture = create_capture()
 
+def generate_frames(capture, f):
     while True:
         frame = read_frame(capture)
         if frame is None:
             break
         else:
-            blue = convert_to_blue(frame)
-            ret, buffer = cv2.imencode('.jpg', blue)
+            converted = f(frame)
+            ret, buffer = cv2.imencode('.jpg', converted)
             encoded = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
@@ -43,10 +42,19 @@ def hello_world():
     return 'Hello, World!'
 
 
-@app.route('/video')
-def video_feed():
-    # Route to stream video
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+mimeType = 'multipart/x-mixed-replace; boundary=frame'
+
+
+@app.route('/recorded-video')
+def recorded_video_feed():
+    source = "wheel2.mp4"
+    capture = cv2.VideoCapture(source)
+    return Response(generate_frames(capture, lambda x: x), mimetype=mimeType)
+
+
+@app.route('/live-video')
+def live_video_feed():
+    return Response(generate_frames(create_capture(), convert_to_blue), mimetype=mimeType)
 
 
 # http://127.0.0.1:5000/video
