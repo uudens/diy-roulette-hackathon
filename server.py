@@ -108,15 +108,24 @@ def warp_perspective(frame, capture):
 
 
 def mark_winning(frame, capture):
-    frame2 = warp_perspective(frame, capture)
+    if config["transform"]:
+        frame2 = warp_perspective(frame, capture)
+    else:
+        frame2 = frame
+
     frame3, zero_angle_deg = detect_zero_pocket(frame2)
     frame4, ball_angle_deg = detect_zero_pocket(frame3)
     if zero_angle_deg is not None and ball_angle_deg is not None:
         diff = ball_angle_deg - zero_angle_deg
-        indices = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 26, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
-        # TODO - based on indices and diff figure out winning number
+        slot_count = 37
+        single_slot_degrees = 360.0 / slot_count
+        ball_at = (diff + 360) / single_slot_degrees # - single_slot_degrees / 2
+        numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 26, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
+        ball_at_idx = round(ball_at) % len(numbers)
+        # print(ball_angle_deg, zero_angle_deg, diff, single_slot_degrees, ball_at, ball_at_idx, numbers[ball_at_idx])
+        winning = numbers[ball_at_idx]
 
-        cv.putText(frame4, f"ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}, diff: {diff: .0f}, winning ??", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv.putText(frame4, f"ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}, diff: {diff: .0f}, winning: {winning}", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
     return frame4
 
@@ -144,7 +153,8 @@ initialConfigStr = """{
         [14, 105],
         [92, 105],
         [80, 20]
-    ]
+    ],
+    "transform": true
 }"""
 config = json.loads(initialConfigStr)
 
