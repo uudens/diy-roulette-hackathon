@@ -2,7 +2,7 @@ from flask import Flask, Response
 from lib import create_capture, read_frame
 import cv2 as cv
 import numpy as np
-
+import math
 
 app = Flask(__name__)
 
@@ -23,6 +23,7 @@ def convert_to_blue(frame, capture):
 
     return blue
 
+
 def draw_green(frame):
     # RGB: 3D7880
     # HSV: 187 52.3 50.2
@@ -39,6 +40,29 @@ def draw_green(frame):
     kernel = np.ones((5, 5), np.uint8)
     mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel)
     frame = cv.drawContours(frame, contours, -1, (0,255,0), 3)
+
+    if contours:
+        largest_contour = max(contours, key=cv.contourArea)
+        M = cv.moments(largest_contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+        else:
+            # Default to center if contour is too small
+            cX, cY = frame.shape[1]//2, frame.shape[0]//2
+        cv.drawContours(frame, [largest_contour], -1, (0,255,0), 3)
+        # Draw centroid
+        cv.circle(frame, (cX, cY), 5, (255, 0, 0), -1)
+
+        frame_center_x, frame_center_y = frame.shape[1] // 2, frame.shape[0] // 2
+
+        # Calculate the angle in radians, then convert to degrees
+        angle_rad = math.atan2(cY - frame_center_y, cX - frame_center_x)
+        angle_deg = math.degrees(angle_rad)
+
+        # Display the angle on the frame
+        cv.putText(frame, f"Angle: {angle_deg:.2f} deg", (frame.shape[1] - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
     return frame
 
 def warp_perspective(frame, capture):
@@ -133,4 +157,4 @@ def live_video_feed():
 
 # http://127.0.0.1:5000/video
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=5555, debug=True)
