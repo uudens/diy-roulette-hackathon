@@ -32,3 +32,14 @@ def read_frame(capture):
             return frame
     else:
         return capture.capture_array()
+
+def get_width_height(capture):
+    if isinstance(capture, cv.VideoCapture):
+        w = capture.get(cv.CAP_PROP_FRAME_WIDTH)
+        h = capture.get(cv.CAP_PROP_FRAME_HEIGHT)
+        return w, h
+    else:
+        config = capture.get_configuration()  # Get the current configuration
+        w = config['main']['size'][0]
+        h = config['main']['size'][1]
+        return w, h

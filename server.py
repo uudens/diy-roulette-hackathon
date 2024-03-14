@@ -1,5 +1,5 @@
 from flask import Flask, Response, request
-from lib import create_capture, read_frame
+from lib import create_capture, read_frame, get_width_height
 from webui import webui_root
 import cv2 as cv
 import json
@@ -70,8 +70,9 @@ def warp_perspective(frame, capture):
     # contours, hierarchy = cv.findContours(gray, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     # out = cv.drawContours(frame, contours, -1, (0,255,0), 3)
 
-    w = capture.get(cv.CAP_PROP_FRAME_WIDTH) / 100
-    h = capture.get(cv.CAP_PROP_FRAME_HEIGHT) / 100
+    w, h = get_width_height(capture)
+    w = w / 100
+    h = h / 100
 
     pt_A_abs = [int(pt_A[0] * w), int(pt_A[1] * h)]
     pt_B_abs = [int(pt_B[0] * w), int(pt_B[1] * h)]
