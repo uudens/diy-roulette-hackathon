@@ -24,7 +24,14 @@ def convert_to_blue(frame, capture):
     return blue
 
 
-def draw_green(frame):
+def detect_ball(frame):
+    targetCol = [14, 51, 155]
+    threshold = 0.5
+
+    return detect_angle(frame, targetCol, threshold)
+
+
+def detect_green_blob(frame):
     # RGB: 3D7880
     # HSV: 187 52.3 50.2
     # targetCol = [187, 134, 129]
@@ -32,6 +39,9 @@ def draw_green(frame):
     targetCol = [87, 134, 129]
     threshold = 0.5
 
+    return detect_angle(frame, targetCol, threshold)
+
+def detect_angle(frame, targetCol, threshold):
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
     L_limit = np.array([targetCol[0] * (1 - threshold), targetCol[1] * (1 - threshold), targetCol[2] * (1 - threshold)])
     U_limit = np.array([targetCol[0] * (1 + threshold), targetCol[1] * (1 + threshold), targetCol[2] * (1 + threshold)])
@@ -39,7 +49,7 @@ def draw_green(frame):
     contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     kernel = np.ones((5, 5), np.uint8)
     mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel)
-    frame = cv.drawContours(frame, contours, -1, (0,255,0), 3)
+    frame = cv.drawContours(frame, contours, -1, (0, 255, 0), 3)
 
     if contours:
         largest_contour = max(contours, key=cv.contourArea)
@@ -50,7 +60,7 @@ def draw_green(frame):
         else:
             # Default to center if contour is too small
             cX, cY = frame.shape[1]//2, frame.shape[0]//2
-        cv.drawContours(frame, [largest_contour], -1, (0,255,0), 3)
+        cv.drawContours(frame, [largest_contour], -1, (0, 255, 0), 3)
         # Draw centroid
         cv.circle(frame, (cX, cY), 5, (255, 0, 0), -1)
 
@@ -60,10 +70,9 @@ def draw_green(frame):
         angle_rad = math.atan2(cY - frame_center_y, cX - frame_center_x)
         angle_deg = math.degrees(angle_rad)
 
-        # Display the angle on the frame
-        cv.putText(frame, f"Angle: {angle_deg:.2f} deg", (frame.shape[1] - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-
-    return frame
+        return frame, angle_deg
+    else:
+        return frame, None
 
 def warp_perspective(frame, capture):
     # https://theailearner.com/tag/cv2-getperspectivetransform/
@@ -117,8 +126,12 @@ def warp_perspective(frame, capture):
 
 def mark_winning(frame, capture):
     warped = warp_perspective(frame, capture)
-    with_green = draw_green(warped)
-    return with_green
+    with_angles, angle_deg = detect_green_blob(warped)
+
+    if angle_deg:
+        cv.putText(with_angles, f"Angle: {angle_deg:.2f} deg", (with_angles.shape[1] - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+    return with_angles
 
 
 def generate_frames(capture, f):
