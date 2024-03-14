@@ -16,10 +16,17 @@ def generate_frames():
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
+
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
+
 @app.route('/video_feed')
 def video_feed():
     # Route to stream video
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 # http://127.0.0.1:5000/video_feed
 if __name__ == '__main__':

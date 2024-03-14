@@ -27,8 +27,8 @@ def read_frame(capture):
         return capture.capture_array()
     else:
         # ret will return a true value if the frame exists otherwise False
-        ret, frame = capture.read()
-        if not ret:
+        success, frame = capture.read()
+        if not success:
             return None
         else:
             return frame

@@ -19,8 +19,9 @@ if __name__ == '__main__':
         # creating the mask using inRange() function
         # this will produce an image where the color of the objects
         # falling in the range will turn white and rest will be black
-        blue=cv2.bitwise_and(frame, frame, mask=b_mask)
+        blue = cv2.bitwise_and(frame, frame, mask=b_mask)
         # this will give the color to mask.
+
         cv2.imshow('Original', frame) # to display the original frame
         cv2.imshow('Blue Detector', blue) # to display the blue object output
 
