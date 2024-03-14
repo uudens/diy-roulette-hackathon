@@ -90,10 +90,13 @@ def warp_perspective(frame, capture):
     out = cv.warpPerspective(frame, M, (maxWidth, maxHeight), flags=cv.INTER_LINEAR)
     return out
 
+
 def mark_winning(frame, capture):
     warped = warp_perspective(frame, capture)
     with_green = draw_green(warped)
     return with_green
+
+
 def generate_frames(capture, f):
     while True:
         frame = read_frame(capture)
@@ -130,4 +133,4 @@ def live_video_feed():
 
 # http://127.0.0.1:5000/video
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
