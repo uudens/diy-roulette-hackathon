@@ -137,7 +137,7 @@ def generate_frames(capture, f):
 initialConfigStr = """{
     "colors_hsv": {
         "zero": [[43, 67, 64], [130, 201, 193]],
-        "ball": [[0, 134, 129], [0, 255, 255]]
+        "ball": [[95, 134, 129], [110, 255, 255]]
     },
     "corners": [
         [18, 21],
