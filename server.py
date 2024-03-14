@@ -6,6 +6,7 @@ import numpy as np
 
 app = Flask(__name__)
 
+
 def convert_to_blue(frame):
     into_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     # changing the color format from BGr to HSV
@@ -46,6 +47,7 @@ def hello_world():
 def video_feed():
     # Route to stream video
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 # http://127.0.0.1:5000/video
 if __name__ == '__main__':
