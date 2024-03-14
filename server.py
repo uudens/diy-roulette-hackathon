@@ -1,6 +1,8 @@
 from flask import Flask, Response
 from lib import create_capture, read_frame
 import cv2
+import numpy as np
+
 
 app = Flask(__name__)
 
@@ -28,11 +30,17 @@ def generate_frames():
         if frame is None:
             break
         else:
-            # blue = convert_to_blue(frame)
-            ret, buffer = cv2.imencode('.jpg', frame)
+            blue = convert_to_blue(frame)
+            ret, buffer = cv2.imencode('.jpg', blue)
             encoded = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
+
+
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
 
 @app.route('/video')
 def video_feed():
