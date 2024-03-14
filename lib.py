@@ -1,4 +1,4 @@
-import cv2
+import cv2 as cv
 
 
 def is_raspberry_pi():
@@ -19,7 +19,7 @@ def create_capture():
 
         return picam2
     else:
-        return cv2.VideoCapture(0)
+        return cv.VideoCapture(0)
 
 
 def read_frame(capture):
