@@ -23,15 +23,7 @@ def convert_to_blue(frame, capture):
 
     return blue
 
-
-def mark_winning(frame, capture):
-    # https://theailearner.com/tag/cv2-getperspectivetransform/
-    # 0 to 100
-    pt_A = [18, 21]
-    pt_B = [14, 105]
-    pt_C = [92, 105]
-    pt_D = [80, 20]
-
+def draw_green(frame):
     # RGB: 3D7880
     # HSV: 187 52.3 50.2
     # targetCol = [187, 134, 129]
@@ -47,12 +39,22 @@ def mark_winning(frame, capture):
     kernel = np.ones((5, 5), np.uint8)
     mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel)
     frame = cv.drawContours(frame, contours, -1, (0,255,0), 3)
-    mask = cv.inRange(hsv, L_limit, U_limit)
+    return frame
 
-    color = cv.bitwise_and(frame, frame, mask=mask)
-    gray = cv.cvtColor(color, cv.COLOR_BGR2GRAY)
+def warp_perspective(frame, capture):
+    # https://theailearner.com/tag/cv2-getperspectivetransform/
+    # 0 to 100
+    pt_A = [18, 21]
+    pt_B = [14, 105]
+    pt_C = [92, 105]
+    pt_D = [80, 20]
 
-    contours, hierarchy = cv.findContours(gray, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    # mask = cv.inRange(hsv, L_limit, U_limit)
+    #
+    # color = cv.bitwise_and(frame, frame, mask=mask)
+    # gray = cv.cvtColor(color, cv.COLOR_BGR2GRAY)
+    #
+    # contours, hierarchy = cv.findContours(gray, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     # out = cv.drawContours(frame, contours, -1, (0,255,0), 3)
 
     w = capture.get(cv.CAP_PROP_FRAME_WIDTH) / 100
@@ -71,7 +73,7 @@ def mark_winning(frame, capture):
     maxHeight = maxWidth
 
     # Mark corners on frame
-    col = [0,255,255]
+    col = [0, 255, 255]
     cv.line(frame, pt_A_abs, pt_B_abs, col, 2)
     cv.line(frame, pt_B_abs, pt_C_abs, col, 2)
     cv.line(frame, pt_C_abs, pt_D_abs, col, 2)
@@ -88,6 +90,10 @@ def mark_winning(frame, capture):
     out = cv.warpPerspective(frame, M, (maxWidth, maxHeight), flags=cv.INTER_LINEAR)
     return out
 
+def mark_winning(frame, capture):
+    with_green = draw_green(frame)
+    warped = warp_perspective(with_green, capture)
+    return warped
 def generate_frames(capture, f):
     while True:
         frame = read_frame(capture)
