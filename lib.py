@@ -8,6 +8,7 @@ def is_raspberry_pi():
     except Exception:
         return False
 
+picam2 = None
 
 def create_capture():
     if is_raspberry_pi():
