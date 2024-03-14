@@ -23,12 +23,12 @@ def create_capture():
 
 
 def read_frame(capture):
-    if is_raspberry_pi():
-        return capture.capture_array()
-    else:
+    if isinstance(capture, cv.VideoCapture):
         # ret will return a true value if the frame exists otherwise False
         success, frame = capture.read()
         if not success:
             return None
         else:
             return frame
+    else:
+        return capture.capture_array()
