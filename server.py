@@ -19,6 +19,7 @@ def detect_zero_pocket(frame):
     global config
     return detect_angle(frame, config["colors_hsv"]["zero"])
 
+
 def detect_angle(frame, hsv_values):
     L_limit = np.array(hsv_values[0])
     U_limit = np.array(hsv_values[1])
@@ -51,6 +52,7 @@ def detect_angle(frame, hsv_values):
         return frame, angle_deg
     else:
         return frame, None
+
 
 def warp_perspective(frame, capture):
     # https://theailearner.com/tag/cv2-getperspectivetransform/
@@ -106,13 +108,17 @@ def warp_perspective(frame, capture):
 
 
 def mark_winning(frame, capture):
-    warped = warp_perspective(frame, capture)
-    with_angles, angle_deg = detect_zero_pocket(warped)
+    frame2 = warp_perspective(frame, capture)
+    frame3, zero_angle_deg = detect_zero_pocket(frame2)
+    frame4, ball_angle_deg = detect_zero_pocket(frame3)
+    if zero_angle_deg is not None and ball_angle_deg is not None:
+        diff = ball_angle_deg - zero_angle_deg
+        indices = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 26, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
+        # TODO - based on indices and diff figure out winning number
 
-    if angle_deg:
-        cv.putText(with_angles, f"Angle: {angle_deg:.2f} deg", (with_angles.shape[1] - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv.putText(frame4, f"ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}, diff: {diff: .0f}, winning ??", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-    return with_angles
+    return frame4
 
 
 def generate_frames(capture, f):
@@ -152,6 +158,7 @@ def configure():
     config = request.json
     print("config updated", config)
     return "OK"
+
 
 mimeType = 'multipart/x-mixed-replace; boundary=frame'
 
