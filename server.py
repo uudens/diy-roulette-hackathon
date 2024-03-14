@@ -91,9 +91,9 @@ def warp_perspective(frame, capture):
     return out
 
 def mark_winning(frame, capture):
-    with_green = draw_green(frame)
-    warped = warp_perspective(with_green, capture)
-    return warped
+    warped = warp_perspective(frame, capture)
+    with_green = draw_green(warped)
+    return with_green
 def generate_frames(capture, f):
     while True:
         frame = read_frame(capture)
