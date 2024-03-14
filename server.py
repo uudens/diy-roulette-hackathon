@@ -11,26 +11,18 @@ app = Flask(__name__)
 
 
 def detect_ball(frame):
-    targetCol = [14, 51, 155]
-    threshold = 0.5
-
-    return detect_angle(frame, targetCol, threshold)
+    global config
+    return detect_angle(frame, config["colors_hsv"]["ball"])
 
 
-def detect_green_blob(frame):
-    # RGB: 3D7880
-    # HSV: 187 52.3 50.2
-    # targetCol = [187, 134, 129]
-    # threshold = 0.1
-    targetCol = [87, 134, 129]
-    threshold = 0.5
+def detect_zero_pocket(frame):
+    global config
+    return detect_angle(frame, config["colors_hsv"]["zero"])
 
-    return detect_angle(frame, targetCol, threshold)
-
-def detect_angle(frame, targetCol, threshold):
+def detect_angle(frame, hsv_values):
+    L_limit = np.array(hsv_values[0])
+    U_limit = np.array(hsv_values[1])
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    L_limit = np.array([targetCol[0] * (1 - threshold), targetCol[1] * (1 - threshold), targetCol[2] * (1 - threshold)])
-    U_limit = np.array([targetCol[0] * (1 + threshold), targetCol[1] * (1 + threshold), targetCol[2] * (1 + threshold)])
     mask = cv.inRange(hsv, L_limit, U_limit)
     contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     kernel = np.ones((5, 5), np.uint8)
@@ -63,10 +55,12 @@ def detect_angle(frame, targetCol, threshold):
 def warp_perspective(frame, capture):
     # https://theailearner.com/tag/cv2-getperspectivetransform/
     # 0 to 100
-    pt_A = [18, 21]
-    pt_B = [14, 105]
-    pt_C = [92, 105]
-    pt_D = [80, 20]
+    global config
+    corners = config["corners"]
+    pt_A = corners[0]
+    pt_B = corners[1]
+    pt_C = corners[2]
+    pt_D = corners[3]
 
     # mask = cv.inRange(hsv, L_limit, U_limit)
     #
@@ -112,7 +106,7 @@ def warp_perspective(frame, capture):
 
 def mark_winning(frame, capture):
     warped = warp_perspective(frame, capture)
-    with_angles, angle_deg = detect_green_blob(warped)
+    with_angles, angle_deg = detect_zero_pocket(warped)
 
     if angle_deg:
         cv.putText(with_angles, f"Angle: {angle_deg:.2f} deg", (with_angles.shape[1] - 200, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
@@ -132,9 +126,10 @@ def generate_frames(capture, f):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
 
-configStr = """{
+
+initialConfigStr = """{
     "colors_hsv": {
-        "zero": [[87, 134, 129], [87, 255, 255]],
+        "zero": [[43, 67, 64], [130, 201, 193]],
         "ball": [[0, 134, 129], [0, 255, 255]]
     },
     "corners": [
@@ -144,11 +139,11 @@ configStr = """{
         [80, 20]
     ]
 }"""
-config = json.loads(configStr)
+config = json.loads(initialConfigStr)
 
 @app.route('/')
 def root():
-    return webui_root(configStr)
+    return webui_root(initialConfigStr)
 
 @app.route('/configure', methods=['POST'])
 def configure():
