@@ -10,23 +10,6 @@ import math
 app = Flask(__name__)
 
 
-def convert_to_blue(frame, capture):
-    into_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    # changing the color format from BGr to HSV
-    # This will be used to create the mask
-    L_limit = np.array([98, 50, 50])  # setting the blue lower limit
-    U_limit = np.array([139, 255, 255])  # setting the blue upper limit
-
-    b_mask = cv.inRange(into_hsv, L_limit, U_limit)
-    # creating the mask using inRange() function
-    # this will produce an image where the color of the objects
-    # falling in the range will turn white and rest will be black
-    blue = cv.bitwise_and(frame, frame, mask=b_mask)
-    # this will give the color to mask.
-
-    return blue
-
-
 def detect_ball(frame):
     targetCol = [14, 51, 155]
     threshold = 0.5
@@ -143,8 +126,8 @@ def generate_frames(capture, f):
         if frame is None:
             break
         else:
-            # blue = convert_to_blue(frame)
-            ret, buffer = cv2.imencode('.jpg', frame)
+            converted = f(frame, capture)
+            ret, buffer = cv2.imencode('.jpg', converted)
             encoded = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
@@ -187,7 +170,7 @@ def recorded_video_feed():
 @app.route('/live-video')
 def live_video_feed():
     capture = create_capture()
-    return Response(generate_frames(capture, convert_to_blue), mimetype=mimeType)
+    return Response(generate_frames(capture, mark_winning), mimetype=mimeType)
 
 
 # http://127.0.0.1:5000/video
