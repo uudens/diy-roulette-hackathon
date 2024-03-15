@@ -121,7 +121,7 @@ def mark_winning(frame, capture: Capture):
         sensor_value_tracker.report_value(winning)
         permanent_winning = sensor_value_tracker.get_value()
 
-        cv.putText(frame4, f"permanent: {permanent_winning}, winning: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+        cv.putText(frame4, f"{permanent_winning} (W: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f})", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
     return frame4
 
