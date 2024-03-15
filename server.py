@@ -173,6 +173,12 @@ config = json.loads("""{
     "transform": true
 }""")
 
+try:
+    f = open("config.json", "r")
+    config = json.loads(f.read())
+except:
+  print("could not parse config.json, reverting to default config")
+
 
 @app.route('/')
 def root():
@@ -184,6 +190,9 @@ def configure():
     global config
     config = request.json
     print("config updated", config)
+    f = open("config.json", "w")
+    f.write(json.dumps(config))
+    f.close()
     return "OK"
 
 
