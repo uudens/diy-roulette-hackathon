@@ -40,6 +40,7 @@ def detect_angle(frame, hsv_values_key: str, contour_colour: tuple[int, int, int
         cv.circle(frame, (cX, cY), 5, midpoint_colour, -1)
 
         frame_center_x, frame_center_y = frame.shape[1] // 2, frame.shape[0] // 2
+        cv.circle(frame, (frame_center_x, frame_center_y), 5, (128, 128, 44), -1) # Show center
 
         # Calculate the angle in radians, then convert to degrees
         angle_rad = math.atan2(cY - frame_center_y, cX - frame_center_x)
@@ -145,9 +146,9 @@ config = json.loads("""{
         "zero": [[45,119,60], [65,171,112]],
         "ball": [[92, 200, 116], [112, 255, 255]]
     },
-    "corners": [
-        [25, 22], [26, 100], [77, 100], [77, 21]
-    ],
+    "corners": 
+        [[27, 22], [23, 98], [83, 100], [72, 21]]
+    ,
     "transform": true
 }""")
 
