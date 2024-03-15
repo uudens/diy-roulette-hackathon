@@ -175,7 +175,7 @@ mimeType = 'multipart/x-mixed-replace; boundary=frame'
 
 @app.route('/recorded-video')
 def recorded_video_feed():
-    source = "wheel2.mp4"
+    source = "test.mp4"
     capture = cv.VideoCapture(source)
     return Response(generate_frames(capture, mark_winning), mimetype=mimeType)
 
