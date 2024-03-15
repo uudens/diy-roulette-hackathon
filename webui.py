@@ -131,9 +131,16 @@ def webui_root(configStr):
                     ctx.canvas.width = img.width;
                     ctx.canvas.height = img.height;
                     ctx.beginPath();
-                    getCorners().forEach((c, i) => ctx[i ? "lineTo" : "moveTo"](c[0] / 100 * ctx.canvas.width, c[1] / 100 * ctx.canvas.height));
-                    ctx.closePath();
+                    const corners = getCorners();
                     ctx.strokeStyle = 'cyan';
+                    corners.forEach((c, i) => ctx[i ? "lineTo" : "moveTo"](c[0] / 100 * ctx.canvas.width, c[1] / 100 * ctx.canvas.height));
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(corners[0][0] / 100 * ctx.canvas.width, corners[0][1] / 100 * ctx.canvas.height);
+                    ctx.lineTo(corners[2][0] / 100 * ctx.canvas.width, corners[2][1] / 100 * ctx.canvas.height);
+                    ctx.moveTo(corners[1][0] / 100 * ctx.canvas.width, corners[1][1] / 100 * ctx.canvas.height);
+                    ctx.lineTo(corners[3][0] / 100 * ctx.canvas.width, corners[3][1] / 100 * ctx.canvas.height);
                     ctx.stroke();
                 }}
                 img.addEventListener('load', drawQuadrilateral)
