@@ -138,26 +138,26 @@ def generate_frames(capture: Capture, f):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
 
+# "zero": [[46, 100 ,53], [66, 255, 255]],
 
-initialConfigStr = """{
+config = json.loads("""{
     "colors_hsv": {
-        "zero": [[43, 67, 64], [130, 201, 193]],
-        "ball": [[95, 134, 129], [110, 255, 255]]
+        "zero": [[92, 200, 116], [112, 255, 255]],
+        "ball": [[92, 200, 116], [112, 255, 255]]
     },
     "corners": [
-        [18, 21],
-        [14, 105],
-        [92, 105],
-        [80, 20]
+        [25, 6],
+        [22, 88],
+        [83, 88],
+        [79, 6]
     ],
     "transform": true
-}"""
-config = json.loads(initialConfigStr)
+}""")
 
 
 @app.route('/')
 def root():
-    return webui_root(initialConfigStr)
+    return webui_root(json.dumps(config))
 
 
 @app.route('/configure', methods=['POST'])
