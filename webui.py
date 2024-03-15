@@ -24,6 +24,20 @@ def webui_root(configStr):
         </head>
         <body>
             <form method="post" action="/configure">
+                <div style="display: flex; flex-direction: column;" class="colors">
+                    <label><input type="range" min="0" max="179" name="colorZeroMinH" />color of zero, min, H <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorZeroMinS" />color of zero, min, S <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorZeroMinV" />color of zero, min, V <input /></label>
+                    <label><input type="range" min="0" max="179" name="colorZeroMaxH" />color of zero, max, H <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorZeroMaxS" />color of zero, max, S <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorZeroMaxV" />color of zero, max, V <input /></label>
+                    <label><input type="range" min="0" max="179" name="colorBallMinH" />color of ball, min, H <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorBallMinS" />color of ball, min, S <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorBallMinV" />color of ball, min, V <input /></label>
+                    <label><input type="range" min="0" max="179" name="colorBallMaxH" />color of ball, max, H <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorBallMaxS" />color of ball, max, S <input /></label>
+                    <label><input type="range" min="0" max="255" name="colorBallMaxV" />color of ball, max, V <input /></label>
+                </div>
                 <div>
                     <label>Color of zero (min)</label>
                     <input type="color" name="colorZeroMin" value="#000000" />
@@ -54,6 +68,8 @@ def webui_root(configStr):
                     <input type="color" name="colorBallMax" value="#000000" />
                     <input type="text" value="0, 0, 0">
                 </div>
+                <label style="display: block"><input type="checkbox" name="live" />show live video</label>
+                <label style="display: block"><input type="checkbox" name="chooseZero" />color picker picks color for zero</label>
                 <input type="checkbox" name="transform" id="transform" /><label for="transform">show transformed video</label><br />
                 <div class="picker" style="position: relative; display: inline-block; cursor: crosshair; user-select: none;">
                     <img src="/recorded-video" width="700" style="pointer-events: none;" />
@@ -81,6 +97,21 @@ def webui_root(configStr):
                 const img = document.querySelector('img');
                 const canvas = document.querySelector('canvas');
 
+                document.querySelectorAll('.colors input[name^=color]').forEach((el) => {{
+                    el.addEventListener('change', () => {{
+                        config.colors_hsv[el.name.includes('Zero') ? 'zero' : 'ball'][el.name.includes('min') ? 0 : 1][el.name.endsWith('H') ? 0 : (el.name.endsWith('S') ? 1 : 2)] = parseFloat(el.value);
+                        el.parentElement.querySelector('input ~ input').value = el.value;
+                    }});
+                }});
+
+                function updateSliders() {{
+                    document.querySelectorAll('.colors input[name^=color]').forEach((el) => {{
+                        el.value = config.colors_hsv[el.name.includes('Zero') ? 'zero' : 'ball'][el.name.includes('min') ? 0 : 1][el.name.endsWith('H') ? 0 : (el.name.endsWith('S') ? 1 : 2)];
+                        el.parentElement.querySelector('input ~ input').value = el.value;
+                    }});
+                }}
+                updateSliders();
+
                 document.querySelector(".picker").addEventListener('click', async e => {{
                     const rect = img.getBoundingClientRect();
                     const x = e.clientX - rect.x;
@@ -105,6 +136,16 @@ def webui_root(configStr):
                         Math.round(Math.max(0, hsv[1] + 256 * threshold)),
                         Math.round(Math.max(0, hsv[2] + 256 * threshold)),
                     ];
+                    const key = document.querySelector('input[name=chooseZero]').checked ? 'zero' : 'ball';
+                    config.colors_hsv[key][0][0] = hsvMin[0];
+                    config.colors_hsv[key][0][1] = hsvMin[1];
+                    config.colors_hsv[key][0][2] = hsvMin[2];
+                    config.colors_hsv[key][1][0] = hsvMax[0];
+                    config.colors_hsv[key][1][1] = hsvMax[1];
+                    config.colors_hsv[key][1][2] = hsvMax[2];
+                    updateSliders();
+                    
+                    el.parentElement.querySelector('input ~ input').value = el.value;
                     document.querySelector("input[name=colorZeroMid]").value = val;
                     document.querySelector("input[name=colorZeroMid] + input").value = rgb2hsv(val);
                     document.querySelector("input[name=colorZeroMin]").value = hsv2rgb(hsvMin);
@@ -181,6 +222,10 @@ def webui_root(configStr):
                     const f = (n,k=(n+h/60)%6) => v - v*s*Math.max( Math.min(k,4-k,1), 0);
                     return `#${{[Math.round(f(5) * 256).toString(16),Math.round(f(3) * 256).toString(16),Math.round(f(1) * 256).toString(16)].join("")}}`;
                 }}
+
+                document.querySelector("input[name=live]").addEventListener("change", (e) => {{
+                    img.src = e.target.checked ? "/live-video" : "/recorded-video";
+                }});
                 
             </script>
             </body>
