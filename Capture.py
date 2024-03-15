@@ -51,7 +51,7 @@ class RaspberryCapture(Capture):
             try:
                 RaspberryCapture.picamera.configure(RaspberryCapture.picamera.create_preview_configuration(main={"format": 'XRGB8888', "size": RaspberryCapture.resolution}))
                 RaspberryCapture.picamera.start()
-                RaspberryCapture.picamera.set_controls({"AfMode": 1, "AfTrigger": 0})
+                RaspberryCapture.picamera.set_controls({"AfMode": 2, "AfTrigger": 0})
             except Exception as e:
                 print(f"Failed to initialize Picamera2: {e}")
 
