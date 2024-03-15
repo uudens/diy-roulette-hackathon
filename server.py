@@ -86,13 +86,6 @@ def warp_perspective(frame, capture: Capture):
     # maxHeight = max(int(height_AB), int(height_CD))
     maxHeight = maxWidth
 
-    # Mark corners on frame
-    col = [0, 255, 255]
-    cv.line(frame, pt_A_abs, pt_B_abs, col, 2)
-    cv.line(frame, pt_B_abs, pt_C_abs, col, 2)
-    cv.line(frame, pt_C_abs, pt_D_abs, col, 2)
-    cv.line(frame, pt_D_abs, pt_A_abs, col, 2)
-
     input_pts = np.float32([pt_A_abs, pt_B_abs, pt_C_abs, pt_D_abs])
     output_pts = np.float32([
         [0, 0],
