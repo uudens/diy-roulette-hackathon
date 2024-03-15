@@ -13,6 +13,10 @@ class Capture(ABC):
         pass
 
 
+    @abstractmethod
+    def get_frame_rate(self) -> float:
+        pass
+
 class CvCapture(Capture):
 
     def __init__(self, source):
@@ -32,6 +36,8 @@ class CvCapture(Capture):
         h = self.capture.get(cv.CAP_PROP_FRAME_HEIGHT)
         return w, h
 
+    def get_frame_rate(self) -> float:
+        return self.capture.get(cv.CAP_PROP_FPS)
 
 class RaspberryCapture(Capture):
     picamera = None
@@ -58,6 +64,9 @@ class RaspberryCapture(Capture):
 
     def get_width_height(self) -> tuple[float, float]:
         return RaspberryCapture.resolution
+
+    def get_frame_rate(self) -> float:
+        return 60
 
 
 def is_raspberry_pi() -> bool:

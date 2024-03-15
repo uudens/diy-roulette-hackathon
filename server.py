@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import math
 from SensorValueTracker import SensorValueTracker
+import time
 
 
 app = Flask(__name__)
@@ -122,7 +123,7 @@ def mark_winning(frame, capture: Capture):
         sensor_value_tracker.report_value(winning)
         permanent_winning = sensor_value_tracker.get_value()
 
-        cv.putText(frame4, f"{permanent_winning} (W: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f})", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+        cv.putText(frame4, f"Winning = {permanent_winning} (tmp: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f})", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
     return frame4
 
@@ -139,7 +140,27 @@ def generate_frames(capture: Capture, f):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
 
-# "zero": [[46, 100 ,53], [66, 255, 255]],
+
+def generate_frames_respecting_frame_rate(capture: Capture, f):
+    frame_rate = capture.get_frame_rate()  # Assuming Capture class has this method
+    time_between_frames = 1 / frame_rate
+
+    while True:
+        frame_start_time = time.time()
+        frame = capture.read_frame()
+        if frame is None:
+            break
+        else:
+            converted = f(frame, capture)
+            ret, buffer = cv2.imencode('.jpg', converted)
+            encoded = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + encoded + b'\r\n')
+        time_elapsed = time.time() - frame_start_time
+        sleep_time = time_between_frames - time_elapsed
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+
 
 config = json.loads("""{
     "colors_hsv": {
@@ -168,7 +189,7 @@ def configure():
 
 def __streaming_response(capture: Capture) -> Response:
     mime_type = 'multipart/x-mixed-replace; boundary=frame'
-    return Response(generate_frames(capture, mark_winning), mimetype=mime_type)
+    return Response(generate_frames_respecting_frame_rate(capture, mark_winning), mimetype=mime_type)
 
 
 @app.route('/recorded-video')
