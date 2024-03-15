@@ -1,5 +1,6 @@
 from flask import Flask, Response, request
 from Capture import *
+from WinningNumberDetector import detect_winning_number
 from webui import webui_root
 import cv2 as cv
 import json
@@ -12,7 +13,7 @@ from SensorValueTracker import SensorValueTracker
 app = Flask(__name__)
 
 
-def detect_angle(frame, hsv_values_key):
+def detect_angle(frame, hsv_values_key: str, contour_colour: tuple[int, int, int], midpoint_colour: tuple[int, int, int]):
     global config
     hsv_values = config["colors_hsv"][hsv_values_key]
 
@@ -23,7 +24,7 @@ def detect_angle(frame, hsv_values_key):
     contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     kernel = np.ones((5, 5), np.uint8)
     mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel)
-    frame = cv.drawContours(frame, contours, -1, (0, 255, 0), 3)
+    frame = cv.drawContours(frame, contours, -1, contour_colour, 3)
 
     if contours:
         largest_contour = max(contours, key=cv.contourArea)
@@ -34,9 +35,9 @@ def detect_angle(frame, hsv_values_key):
         else:
             # Default to center if contour is too small
             cX, cY = frame.shape[1]//2, frame.shape[0]//2
-        cv.drawContours(frame, [largest_contour], -1, (0, 255, 0), 3)
+        cv.drawContours(frame, [largest_contour], -1, contour_colour, 3)
         # Draw centroid
-        cv.circle(frame, (cX, cY), 5, (255, 0, 0), -1)
+        cv.circle(frame, (cX, cY), 5, midpoint_colour, -1)
 
         frame_center_x, frame_center_y = frame.shape[1] // 2, frame.shape[0] // 2
 
@@ -49,7 +50,7 @@ def detect_angle(frame, hsv_values_key):
         return frame, None
 
 
-def warp_perspective(frame, capture):
+def warp_perspective(frame, capture: Capture):
     # https://theailearner.com/tag/cv2-getperspectivetransform/
     # 0 to 100
     global config
@@ -102,7 +103,7 @@ def warp_perspective(frame, capture):
     return out
 
 
-sensor_value_tracker = SensorValueTracker(threshold_seconds=2)
+sensor_value_tracker: SensorValueTracker = SensorValueTracker(threshold_seconds=2)
 
 
 def mark_winning(frame, capture: Capture):
@@ -112,21 +113,14 @@ def mark_winning(frame, capture: Capture):
     else:
         frame2 = frame
 
-    frame3, zero_angle_deg = detect_angle(frame2, "zero")
-    frame4, ball_angle_deg = detect_angle(frame3, "ball")
+    frame3, zero_angle_deg = detect_angle(frame2, "zero", (0, 255, 0), (255, 0, 0))
+    frame4, ball_angle_deg = detect_angle(frame3, "ball",(255, 255, 0), (255, 0, 255))
     if zero_angle_deg is not None and ball_angle_deg is not None:
-        diff = ball_angle_deg - zero_angle_deg
-        slot_count = 37
-        single_slot_degrees = 360.0 / slot_count
-        ball_at = (diff + 360) / single_slot_degrees # - single_slot_degrees / 2
-        numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 26, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26]
-        ball_at_idx = round(ball_at) % len(numbers)
-        # print(ball_angle_deg, zero_angle_deg, diff, single_slot_degrees, ball_at, ball_at_idx, numbers[ball_at_idx])
-        winning = numbers[ball_at_idx]
+        winning = detect_winning_number(zero_angle_deg, ball_angle_deg)
         sensor_value_tracker.report_value(winning)
         permanent_winning = sensor_value_tracker.get_value()
 
-        cv.putText(frame4, f"permanent: {permanent_winning}, winning: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}, diff: {diff: .0f}", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+        cv.putText(frame4, f"permanent: {permanent_winning}, winning: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
     return frame4
 
@@ -173,21 +167,23 @@ def configure():
     return "OK"
 
 
-mimeType = 'multipart/x-mixed-replace; boundary=frame'
+def __streaming_response(capture: Capture) -> Response:
+    mime_type = 'multipart/x-mixed-replace; boundary=frame'
+    return Response(generate_frames(capture, mark_winning), mimetype=mime_type)
 
 
 @app.route('/recorded-video')
-def recorded_video_feed():
+def recorded_video_feed() -> Response:
     capture = create_file_capture("test.mp4")
-    return Response(generate_frames(capture, mark_winning), mimetype=mimeType)
+    return __streaming_response(capture)
 
 
 @app.route('/live-video')
-def live_video_feed():
+def live_video_feed() -> Response:
     capture = create_live_capture()
-    return Response(generate_frames(capture, mark_winning), mimetype=mimeType)
+    return __streaming_response(capture)
 
 
-# http://127.0.0.1:5000/video
+# http://127.0.0.1:5555/
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555, debug=True)
