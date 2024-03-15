@@ -1,5 +1,5 @@
 from flask import Flask, Response, request
-from lib import create_file_capture, create_live_capture, read_frame, get_width_height
+from Capture import *
 from webui import webui_root
 import cv2 as cv
 import json
@@ -67,7 +67,7 @@ def warp_perspective(frame, capture):
     # contours, hierarchy = cv.findContours(gray, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     # out = cv.drawContours(frame, contours, -1, (0,255,0), 3)
 
-    w, h = get_width_height(capture)
+    w, h = capture.get_width_height()
     w = w / 100
     h = h / 100
 
@@ -105,7 +105,7 @@ def warp_perspective(frame, capture):
 sensor_value_tracker = SensorValueTracker(threshold_seconds=2)
 
 
-def mark_winning(frame, capture):
+def mark_winning(frame, capture: Capture):
     global sensor_value_tracker
     if config["transform"]:
         frame2 = warp_perspective(frame, capture)
@@ -131,9 +131,9 @@ def mark_winning(frame, capture):
     return frame4
 
 
-def generate_frames(capture, f):
+def generate_frames(capture: Capture, f):
     while True:
-        frame = read_frame(capture)
+        frame = capture.read_frame()
         if frame is None:
             break
         else:
@@ -159,9 +159,11 @@ initialConfigStr = """{
 }"""
 config = json.loads(initialConfigStr)
 
+
 @app.route('/')
 def root():
     return webui_root(initialConfigStr)
+
 
 @app.route('/configure', methods=['POST'])
 def configure():
