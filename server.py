@@ -142,7 +142,7 @@ def generate_frames(capture: Capture, f):
 
 config = json.loads("""{
     "colors_hsv": {
-        "zero": [[92, 200, 116], [112, 255, 255]],
+        "zero": [[45,119,60], [65,171,112]],
         "ball": [[92, 200, 116], [112, 255, 255]]
     },
     "corners": [
