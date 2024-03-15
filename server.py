@@ -114,7 +114,8 @@ def mark_winning(frame, capture: Capture):
         frame2 = frame
 
     frame3, zero_angle_deg = detect_angle(frame2, "zero", (0, 255, 0), (255, 0, 0))
-    frame4, ball_angle_deg = detect_angle(frame3, "ball",(255, 255, 0), (255, 0, 255))
+    frame4, ball_angle_deg = detect_angle(frame3, "ball", (255, 255, 0), (255, 0, 255))
+
     if zero_angle_deg is not None and ball_angle_deg is not None:
         winning = detect_winning_number(zero_angle_deg, ball_angle_deg)
         sensor_value_tracker.report_value(winning)
