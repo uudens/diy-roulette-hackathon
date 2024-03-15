@@ -56,7 +56,7 @@ def webui_root(configStr):
                 </div>
                 <input type="checkbox" name="transform" id="transform" /><label for="transform">show transformed video</label><br />
                 <div class="picker" style="position: relative; display: inline-block; cursor: crosshair; user-select: none;">
-                    <img src="/live-video" width="700" style="pointer-events: none;" />
+                    <img src="/recorded-video" width="700" style="pointer-events: none;" />
                     <canvas style="position: absolute; top:0; left:0;"></canvas>
                     <div class="corner"></div>
                     <div class="corner"></div>
