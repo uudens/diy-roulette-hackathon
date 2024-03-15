@@ -2,6 +2,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from typing import Deque, Optional, Tuple
 
+
 class SensorValueTracker:
     def __init__(self, threshold_seconds: int, percentage: float = 95.0):
         self.threshold_seconds: int = threshold_seconds

@@ -1,5 +1,5 @@
 from flask import Flask, Response, request
-from lib import create_capture, read_frame, get_width_height
+from lib import create_file_capture, create_live_capture, read_frame, get_width_height
 from webui import webui_root
 import cv2 as cv
 import json
@@ -104,6 +104,7 @@ def warp_perspective(frame, capture):
 
 sensor_value_tracker = SensorValueTracker(threshold_seconds=2)
 
+
 def mark_winning(frame, capture):
     global sensor_value_tracker
     if config["transform"]:
@@ -175,14 +176,13 @@ mimeType = 'multipart/x-mixed-replace; boundary=frame'
 
 @app.route('/recorded-video')
 def recorded_video_feed():
-    source = "test.mp4"
-    capture = cv.VideoCapture(source)
+    capture = create_file_capture("test.mp4")
     return Response(generate_frames(capture, mark_winning), mimetype=mimeType)
 
 
 @app.route('/live-video')
 def live_video_feed():
-    capture = create_capture()
+    capture = create_live_capture()
     return Response(generate_frames(capture, mark_winning), mimetype=mimeType)
 
 

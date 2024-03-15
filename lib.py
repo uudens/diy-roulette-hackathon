@@ -10,7 +10,12 @@ def is_raspberry_pi():
 
 picam2 = None
 
-def create_capture():
+
+def create_file_capture(source):
+    return cv.VideoCapture(source)
+
+
+def create_live_capture():
     if is_raspberry_pi():
         from picamera2 import Picamera2
 
