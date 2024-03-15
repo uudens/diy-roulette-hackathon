@@ -6,6 +6,8 @@ import json
 import cv2
 import numpy as np
 import math
+from SensorValueTracker import SensorValueTracker
+
 
 app = Flask(__name__)
 
@@ -100,7 +102,10 @@ def warp_perspective(frame, capture):
     return out
 
 
+sensor_value_tracker = SensorValueTracker(threshold_seconds=2)
+
 def mark_winning(frame, capture):
+    global sensor_value_tracker
     if config["transform"]:
         frame2 = warp_perspective(frame, capture)
     else:
@@ -117,8 +122,10 @@ def mark_winning(frame, capture):
         ball_at_idx = round(ball_at) % len(numbers)
         # print(ball_angle_deg, zero_angle_deg, diff, single_slot_degrees, ball_at, ball_at_idx, numbers[ball_at_idx])
         winning = numbers[ball_at_idx]
+        sensor_value_tracker.report_value(winning)
+        permanent_winning = sensor_value_tracker.get_value()
 
-        cv.putText(frame4, f"winning: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}, diff: {diff: .0f}", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+        cv.putText(frame4, f"permanent: {permanent_winning}, winning: {winning}, ZA: {zero_angle_deg:.0f}, BA: {ball_angle_deg:.0f}, diff: {diff: .0f}", (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
     return frame4
 
